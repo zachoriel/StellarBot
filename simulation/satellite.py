@@ -1,5 +1,5 @@
-from orbit_sim import Satellite as OrbitSatellite
-from coverage_grid import EarthGrid
+from simulation.orbit_sim import Satellite as OrbitSatellite
+from simulation.coverage_grid import EarthGrid
 
 class SatelliteAgent:
     def __init__(self, sat_id: int, altitude_km: float, angular_speed_deg: float, phase_deg: float, coverage_radius_km: float):

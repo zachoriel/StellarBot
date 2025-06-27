@@ -1,5 +1,5 @@
-from satellite import SatelliteAgent
-from coverage_grid import EarthGrid
+from simulation.satellite import SatelliteAgent
+from simulation.coverage_grid import EarthGrid
 
 class StellarBotEnv:
     def __init__(self, num_sats=3, grid_width=36, grid_height=18):
