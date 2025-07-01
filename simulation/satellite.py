@@ -16,11 +16,11 @@ class SatelliteAgent:
         self.coverage_radius = coverage_radius_km
         self.orbit = OrbitSatellite(altitude_km, angular_speed_deg, phase_deg)
         
-    def step(self):
+    def step(self, dt: float = 1.0):
         """
         Advance satellite in its orbit.
         """
-        self.orbit.step()
+        self.orbit.step_continuous(dt)
         
     def position(self):
         """

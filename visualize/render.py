@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
+import time
 from simulation.stellarbot_env import StellarBotEnv
 
 def draw_frame(env: StellarBotEnv, ax_sim, ax_graph):
@@ -10,7 +11,7 @@ def draw_frame(env: StellarBotEnv, ax_sim, ax_graph):
     ax_sim.set_aspect('equal')
     ax_sim.set_xlim(-7000, 7000)
     ax_sim.set_ylim(-7000, 7000)
-    ax_sim.set_title(f"StellarBot Simulation — Step {env.step_count}")
+    ax_sim.set_title("StellarBot — Real-Time Orbit")
     
     # Plot grid tiles
     tiles = env.grid.all_tile_positions()
@@ -45,27 +46,40 @@ def draw_frame(env: StellarBotEnv, ax_sim, ax_graph):
     ]
     ax_sim.legend(handles=legend_elements, loc='lower left', fontsize=8)
     
-    # Plot coverage %
-    steps = list(range(1, env.step_count + 1))
-    ax_graph.plot(steps, env.coverage_log, color='green')
+    # Update coverage log
+    coverage_percent = 100 * len(covered) / (env.grid.width * env.grid.height)
+    env.coverage_log.append(coverage_percent)
+    
+    # Plot coverage graph
+    ax_graph.clear()
+    ax_graph.plot(env.coverage_log, color='green')
+    ax_graph.set_xlim(0, max(50, len(env.coverage_log)))
     ax_graph.set_ylim(0, 100)
-    ax_graph.set_xlim(0, max(50, env.step_count + 1))
-    ax_graph.set_xlabel("Step")
+    ax_graph.set_title("Coverage % Over Time")
+    ax_graph.set_xlabel("Frame")
     ax_graph.set_ylabel("Coverage (%)")
-    ax_graph.set_title("Earth Coverage Over Time")
     ax_graph.grid(True)
         
-def run_animation(steps=50, delay=0.01):
+def run_real_time_sim(duration=20.0):
     env = StellarBotEnv(num_sats=6)
     
     fig, (ax_sim, ax_graph) = plt.subplots(1, 2, figsize=(14, 7))
     
-    for _ in range(steps):
+    last_time = time.perf_counter()
+    end_time = last_time + duration
+    
+    while time.perf_counter() < end_time:
+        current = time.perf_counter()
+        dt = current - last_time
+        last_time = current
+        
+        for sat in env.satellites:
+            sat.step(dt)
+            
         draw_frame(env, ax_sim, ax_graph)
-        env.step()
-        plt.pause(delay)
+        plt.pause(0.01)
         
     plt.show()
     
 if __name__ == "__main__":
-    run_animation()
+    run_real_time_sim()

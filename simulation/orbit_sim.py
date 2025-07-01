@@ -1,7 +1,7 @@
 import numpy as np
 
 class Satellite:
-    def __init__(self, altitude_km: float, angular_speed_deg: float, phase_deg: float = 0.0):
+    def __init__(self, altitude_km: float, angular_speed_deg_per_sec: float, phase_deg: float = 0.0):
         """       
         Represents a satellite in circular 2D orbit.
         
@@ -11,13 +11,10 @@ class Satellite:
         """
         self.altitude = altitude_km
         self.angle = phase_deg % 360
-        self.speed = angular_speed_deg
+        self.speed = angular_speed_deg_per_sec
         
-    def step(self):
-        """
-        Advance the satellite's position by one timestep.
-        """
-        self.angle = (self.angle + self.speed) % 360
+    def step_continuous(self, dt: float):
+        self.angle = (self.angle + self.speed * dt) % 360
         
     def position(self) -> tuple[float, float]:
         """
