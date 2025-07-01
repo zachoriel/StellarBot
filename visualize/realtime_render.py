@@ -84,6 +84,7 @@ def create_env(num_sats):
 
 env = create_env(num_sats=6)
 sim_start = time.perf_counter()
+last_frame_time = time.perf_counter()
 running = True
 paused = False
 show_ids = True
@@ -91,6 +92,7 @@ show_coverage_percent = True
 show_trails = True
 use_heatmap = False
 show_controls = True
+show_debug = False
 
 coverage_intensity = defaultdict(float)
 
@@ -110,6 +112,9 @@ while running:
                     show_trails = not show_trails
                 elif heatmap_button.collidepoint(event.pos):
                     use_heatmap = not use_heatmap
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_d:
+                show_debug = not show_debug
         if show_controls:
             alt_slider.handle_event(event)
             cov_slider.handle_event(event)
@@ -177,8 +182,8 @@ while running:
         pygame.draw.circle(screen, BLUE, (x_px, y_px), radius_px, width=1)
 
     # Update coverage percentage text
+    coverage_percent = 100 * len(covered) / (env.grid.width * env.grid.height)
     if show_coverage_percent:
-        coverage_percent = 100 * len(covered) / (env.grid.width * env.grid.height)
         coverage_text = font.render(f"Coverage: {coverage_percent:.1f}%", True, WHITE)
         screen.blit(coverage_text, (SCREEN_WIDTH - 200, 20))
 
@@ -217,6 +222,29 @@ while running:
         heatmap_label = font.render("Heatmap", True, BLACK)
         heatmap_rect = heatmap_label.get_rect(center=heatmap_button.center)
         screen.blit(heatmap_label, heatmap_rect)
+        
+    if show_debug:
+        debug_bg = pygame.Surface((260, 130))
+        debug_bg.set_alpha(160)
+        debug_bg.fill((30, 30, 30))
+        screen.blit(debug_bg, (SCREEN_WIDTH - 270, 60))
+        
+        now = time.perf_counter()
+        fps = 1 / (now - last_frame_time)
+        last_frame_time = now
+        
+        debug_lines = [
+            f"FPS: {fps:.1f}",
+            f"Satellites: {len(env.satellites)}",
+            f"Altitude: {int(next(iter(env.satellites.values())).orbit.altitude)} km",
+            f"Coverage: {int(next(iter(env.satellites.values())).coverage_radius)} km",
+            f"Coverage %: {coverage_percent:.1f}%",
+            f"Sim Time: {now - sim_start:.1f} sec",
+        ]
+        
+        for i, line in enumerate(debug_lines):
+            text = font.render(line, True, WHITE)
+            screen.blit(text, (SCREEN_WIDTH - 260, 70 + i * 20))
 
     pygame.display.flip()
 
