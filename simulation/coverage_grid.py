@@ -47,13 +47,4 @@ class EarthGrid:
     
     def grid_shape(self) -> tuple[int, int]:
         return (self.height, self.width)
-    
-# TEST
-# if __name__ == "__main__":
-#     grid = EarthGrid(width=36, height=18)
-#     sat_x, sat_y = 2000, 1000  # Example satellite position
-#     coverage_radius = 2500     # km
-    
-#     covered = grid.covered_tiles((sat_x, sat_y), coverage_radius)
-#     print(f"Satellite at ({sat_x}, {sat_y}) covers {len(covered)} tiles.")
         

@@ -1,5 +1,6 @@
 from simulation.satellite import SatelliteAgent
 from simulation.coverage_grid import EarthGrid
+import time
 
 class StellarBotEnv:
     def __init__(self, num_sats=3, grid_width=36, grid_height=18):
@@ -10,14 +11,16 @@ class StellarBotEnv:
         
     def _init_satellites(self, num_sats):
         sats = []
+        shared_start = time.perf_counter()
         for i in range(num_sats):
             phase = (360 / num_sats) * i  # Evenly spaced
             sats.append(SatelliteAgent(
                 sat_id=i,
                 altitude_km=7000,
-                angular_speed_deg=15,
+                angular_speed_deg_per_sec=15,
                 phase_deg=phase,
-                coverage_radius_km=2500
+                coverage_radius_km=2500,
+                start_time=shared_start
             ))
         return sats
     
@@ -55,12 +58,4 @@ class StellarBotEnv:
         Returns current (x, y) positions of all satellites.
         """
         return [sat.position() for sat in self.satellites]
-  
-# TEST  
-# if __name__ == "__main__":
-#     env = StellarBotEnv(num_sats=3)
-    
-#     for _ in range(5):
-#         result = env.step()
-#         print(f"Step {result['step']}: {result['coverage_tiles']} tiles covered ({result['coverage_percent']:.1f}%)")
     
