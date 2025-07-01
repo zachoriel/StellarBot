@@ -2,7 +2,7 @@ import pygame
 import sys
 import time
 import math
-from collections import deque
+from collections import deque, defaultdict
 from simulation.stellarbot_env import StellarBotEnv
 
 # Constants
@@ -21,6 +21,11 @@ GRAY = (180, 180, 180)
 RED = (255, 0, 0)
 BLUE = (50, 100, 255)
 LIGHT_BLUE = (100, 150, 255)
+HEAT_COLOR = (255, 165, 0)
+
+# Heatmap parameters
+HEAT_GAIN = 0.1
+HEAT_DECAY = 0.98
 
 # Initialize PyGame
 pygame.init()
@@ -37,10 +42,14 @@ paused = False
 show_ids = True
 show_coverage_percent = True
 show_trails = True
+use_heatmap = False
 
 # Attach trail deques to each satellite
 for sat in env.satellites:
     sat.trail = deque(maxlen=MAX_TRAIL_LENGTH)
+
+# Heatmap tracking
+coverage_intensity = defaultdict(float)
 
 # Buttons
 button_font = pygame.font.SysFont(None, 24)
@@ -63,6 +72,8 @@ while running:
                 show_coverage_percent = not show_coverage_percent
             if event.key == pygame.K_t:
                 show_trails = not show_trails
+            if event.key == pygame.K_h:
+                use_heatmap = not use_heatmap
 
     if paused:
         continue
@@ -81,6 +92,15 @@ while running:
         pos = sat.position()
         covered.update(env.grid.covered_tiles(pos, sat.coverage_radius))
 
+    # Update heatmap intensities
+    for row in range(env.grid.height):
+        for col in range(env.grid.width):
+            key = (row, col)
+            if key in covered:
+                coverage_intensity[key] = min(1.0, coverage_intensity[key] + HEAT_GAIN)
+            else:
+                coverage_intensity[key] *= HEAT_DECAY
+
     # Draw tiles
     for row in range(env.grid.height):
         for col in range(env.grid.width):
@@ -90,7 +110,17 @@ while running:
                 continue
             x_px = int(CENTER_X + x_km * SCALE)
             y_px = int(CENTER_Y - y_km * SCALE)
-            color = LIGHT_BLUE if (row, col) in covered else GRAY
+
+            if use_heatmap:
+                intensity = coverage_intensity[(row, col)]
+                color = (
+                    int(HEAT_COLOR[0] * intensity),
+                    int(HEAT_COLOR[1] * intensity),
+                    int(HEAT_COLOR[2] * intensity)
+                )
+            else:
+                color = LIGHT_BLUE if (row, col) in covered else GRAY
+
             pygame.draw.circle(screen, color, (x_px, y_px), 2)
 
     # Draw satellites
