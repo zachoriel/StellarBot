@@ -2,6 +2,7 @@ import pygame
 import sys
 import time
 import math
+from collections import deque
 from simulation.stellarbot_env import StellarBotEnv
 
 # Constants
@@ -11,6 +12,7 @@ CENTER_X = SCREEN_WIDTH // 2
 CENTER_Y = SCREEN_HEIGHT // 2
 SCALE = 0.05  # km to pixels (adjust to fit 7000 km radius on screen)
 FPS = 60
+MAX_TRAIL_LENGTH = 120
 
 # Colors
 BLACK = (0, 0, 0)
@@ -34,6 +36,11 @@ running = True
 paused = False
 show_ids = True
 show_coverage_percent = True
+show_trails = True
+
+# Attach trail deques to each satellite
+for sat in env.satellites:
+    sat.trail = deque(maxlen=MAX_TRAIL_LENGTH)
 
 # Buttons
 button_font = pygame.font.SysFont(None, 24)
@@ -54,6 +61,8 @@ while running:
                 show_ids = not show_ids
             if event.key == pygame.K_c:
                 show_coverage_percent = not show_coverage_percent
+            if event.key == pygame.K_t:
+                show_trails = not show_trails
 
     if paused:
         continue
@@ -76,12 +85,13 @@ while running:
     for row in range(env.grid.height):
         for col in range(env.grid.width):
             x_km, y_km = tiles[row, col]
+            dist = math.sqrt(x_km**2 + y_km**2)
+            if dist > env.grid.radius:
+                continue
             x_px = int(CENTER_X + x_km * SCALE)
             y_px = int(CENTER_Y - y_km * SCALE)
             color = LIGHT_BLUE if (row, col) in covered else GRAY
-            dist = math.sqrt(x_km**2 + y_km**2)
-            if dist <= env.grid.radius:
-                pygame.draw.circle(screen, color, (x_px, y_px), 2)
+            pygame.draw.circle(screen, color, (x_px, y_px), 2)
 
     # Draw satellites
     for sat in env.satellites:
@@ -89,6 +99,14 @@ while running:
         x_px = int(CENTER_X + x_km * SCALE)
         y_px = int(CENTER_Y - y_km * SCALE)
 
+        # Update trail
+        sat.trail.append((x_px, y_px))
+
+        # Draw trail
+        if show_trails and len(sat.trail) > 1:
+            pygame.draw.lines(screen, RED, False, list(sat.trail), width=1)
+
+        # Draw satellite
         pygame.draw.circle(screen, RED, (x_px, y_px), 4)
 
         if show_ids:
