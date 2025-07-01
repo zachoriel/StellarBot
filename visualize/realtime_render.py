@@ -70,14 +70,13 @@ trail_button = pygame.Rect(60, 220, 100, 30)
 heatmap_button = pygame.Rect(180, 220, 100, 30)
 
 # Sliders
-sat_slider = Slider(60, 70, 200, 1, 12, 6)
-alt_slider = Slider(60, 120, 200, 5000, 10000, 7000)
-cov_slider = Slider(60, 170, 200, 1000, 4000, 2500)
+alt_slider = Slider(60, 70, 200, 5000, 10000, 7000)
+cov_slider = Slider(60, 120, 200, 1000, 4000, 2500)
 
 # Simulation Environment
 def create_env(num_sats):
     env = StellarBotEnv(num_sats=num_sats)
-    for sat in env.satellites:
+    for sat in env.satellites.values():
         sat.orbit.altitude = int(alt_slider.value)
         sat.coverage_radius = int(cov_slider.value)
         sat.trail = deque(maxlen=MAX_TRAIL_LENGTH)
@@ -112,7 +111,6 @@ while running:
                 elif heatmap_button.collidepoint(event.pos):
                     use_heatmap = not use_heatmap
         if show_controls:
-            sat_slider.handle_event(event)
             alt_slider.handle_event(event)
             cov_slider.handle_event(event)
 
@@ -127,7 +125,7 @@ while running:
 
     # Update satellite orbit data
     covered = set()
-    for sat in env.satellites:
+    for sat in env.satellites.values():
         pos = sat.position()
         sat.orbit.altitude = int(alt_slider.value)
         sat.coverage_radius = int(cov_slider.value)
@@ -164,7 +162,7 @@ while running:
             pygame.draw.circle(screen, color, (x_px, y_px), 2)
 
     # Draw satellites
-    for sat in env.satellites:
+    for sat in env.satellites.values():
         x_km, y_km = sat.position()
         x_px = int(CENTER_X + x_km * SCALE)
         y_px = int(CENTER_Y - y_km * SCALE)
@@ -192,13 +190,7 @@ while running:
 
     if show_controls:
         pygame.draw.rect(screen, (50, 50, 50), pygame.Rect(10, 40, 300, 220))
-        
-        # Satellites slider
-        satellites_label = font.render(f"Satellites: {int(sat_slider.value)}", True, WHITE)
-        satellites_rect = satellites_label.get_rect(centerx=sat_slider.rect.centerx)
-        satellites_rect.top = sat_slider.rect.top - 20
-        screen.blit(satellites_label, satellites_rect)
-        
+
         # Altitude slider
         altitude_label = font.render(f"Altitude: {int(alt_slider.value)} km", True, WHITE)
         altitude_rect = altitude_label.get_rect(centerx=alt_slider.rect.centerx)
@@ -211,7 +203,6 @@ while running:
         coverage_rect.top = cov_slider.rect.top - 20
         screen.blit(font.render(f"Coverage: {int(cov_slider.value)} km", True, WHITE), coverage_rect)
         
-        sat_slider.draw(screen)
         alt_slider.draw(screen)
         cov_slider.draw(screen)
         
@@ -226,9 +217,6 @@ while running:
         heatmap_label = font.render("Heatmap", True, BLACK)
         heatmap_rect = heatmap_label.get_rect(center=heatmap_button.center)
         screen.blit(heatmap_label, heatmap_rect)
-
-        #env = create_env(int(sat_slider.value))
-        #coverage_intensity.clear()
 
     pygame.display.flip()
 

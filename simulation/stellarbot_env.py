@@ -10,19 +10,37 @@ class StellarBotEnv:
         self.coverage_log = []
         
     def _init_satellites(self, num_sats):
-        sats = []
+        sats = {}
         shared_start = time.perf_counter()
         for i in range(num_sats):
             phase = (360 / num_sats) * i  # Evenly spaced
-            sats.append(SatelliteAgent(
+            sats[i] = SatelliteAgent(
                 sat_id=i,
                 altitude_km=7000,
                 angular_speed_deg_per_sec=15,
                 phase_deg=phase,
                 coverage_radius_km=2500,
                 start_time=shared_start
-            ))
+            )
         return sats
+    
+    def add_satellite(self, alt, coverage, phase):
+        if self.satellites:
+            new_id = max(self.satellites.keys()) + 1
+        else:
+            new_id = 0
+            
+        self.satellites[new_id] = SatelliteAgent(
+            sat_id = new_id,
+            altitude_km=alt,
+            angular_speed_deg_per_sec=15,
+            phase_deg=phase,
+            coverage_radius_km=coverage,
+            start_time=time.perf_counter()
+        )
+        
+    def remove_satellite(self, sat_id):
+        self.satellites.pop(sat_id, None)
     
     def step(self):
         """
